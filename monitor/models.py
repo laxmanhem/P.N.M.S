@@ -2,12 +2,6 @@ from django.db import models
 
 
 class Log(models.Model):
-    timestamp = models.DateTimeField()
-    message = models.TextField()
-    level = models.CharField(max_length=50)
-
-
-class Log(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     source_ip = models.GenericIPAddressField()
     destination_ip = models.GenericIPAddressField()

@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render
 
 from .models import AnomalyLog
@@ -31,36 +32,6 @@ def log_analysis(request):
     return render(request, 'log_analysis.html', {'logs': logs})
 
 
-def real_time_monitoring(request):
-    return render(request, 'network_monitor/real_time_monitoring.html')
-
-
-
-def anomaly_logs(request):
-    logs = Log.objects.all()
-
-    search_query = request.GET.get('search', '')
-    protocol_filter = request.GET.get('protocol', '')
-    anomaly_filter = request.GET.get('anomaly', '')
-
-    # Filtering logic
-    if search_query:
-        logs = logs.filter(source_ip__icontains=search_query) | logs.filter(destination_ip__icontains=search_query)
-
-    print(protocol_filter)
-
-    if protocol_filter:
-        logs = logs.filter(protocol=protocol_filter)
-
-    if anomaly_filter:
-        logs = logs.filter(anomaly_type=anomaly_filter)
-
-    return render(request, 'logs.html', {'logs': logs})
-
-
-
-
-
 def logout_view(request):
     logout(request)
     return redirect('login')  # Redirect to login page after logout
@@ -71,6 +42,22 @@ def base(request):
 
 @login_required
 def anomaly_logs(request):
-    logs = AnomalyLog.objects.all().order_by('-timestamp')[:50]
+    logs = AnomalyLog.objects.all().order_by('-timestamp')
+
+    search_query = request.GET.get('search', '')
+    protocol_filter = request.GET.get('protocol', '')
+    anomaly_filter = request.GET.get('anomaly', '')
+
+    if search_query:
+        logs = logs.filter(Q(source_ip__icontains=search_query) | Q(destination_ip__icontains=search_query))
+
+    if protocol_filter:
+        logs = logs.filter(protocol=protocol_filter)
+
+    if anomaly_filter:
+        logs = logs.filter(anomaly_type=anomaly_filter)
+
+    logs = logs[:50]
+
     return render(request, 'monitor/logs.html', {'logs': logs})
 

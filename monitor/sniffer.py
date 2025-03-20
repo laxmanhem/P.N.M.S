@@ -117,6 +117,20 @@ def packet_handler(packet):
                 downlink_bandwidth=matrices['downlink_bandwidth'],
                 anomaly_type=', '.join([k for k, v in anomalies.items() if v])
             )
+        else:
+            AnomalyLog.objects.create(
+                source_ip=packet_data['source_ip'],
+                destination_ip=packet_data['dest_ip'],
+                protocol=packet_data['protocol'],
+                length=packet_data['length'],
+                latency=matrices['latency'],
+                jitter=matrices['jitter'],
+                packet_loss=matrices['packet_loss'],
+                bandwidth=matrices['bandwidth'],
+                uplink_bandwidth=matrices['uplink_bandwidth'],
+                downlink_bandwidth=matrices['downlink_bandwidth'],
+                anomaly_type='Normal'
+            )
 
         # print(
         #     f"packet_data: {packet_data}\

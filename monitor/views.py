@@ -15,21 +15,22 @@ import json
 
 
 def log_analysis(request):
-    # Example log data (replace with real log fetching/analysis logic)
-    logs = [
-        {"timestamp": "2025-03-18 12:30:00", "message": "Anomaly detected in network traffic", "level": "ERROR"},
-        {"timestamp": "2025-03-18 12:45:00", "message": "Network traffic normal", "level": "INFO"},
-        # Add more log entries as needed
-    ]
+    logs = AnomalyLog.objects.all().order_by('-timestamp')
 
-    # You can add log analysis logic here if needed
+    search_query = request.GET.get('search', '')
+    protocol_filter = request.GET.get('protocol', '')
+    anomaly_filter = request.GET.get('anomaly', '')
 
-    # If the request is AJAX (for fetching logs dynamically)
-    if request.is_ajax():
-        return JsonResponse({'logs': logs})
+    if search_query:
+        logs = logs.filter(Q(source_ip__icontains=search_query) | Q(destination_ip__icontains=search_query) | Q(anomaly_type__icontains=search_query))
 
-    # Otherwise, render the log analysis page (for regular navigation)
-    return render(request, 'log_analysis.html', {'logs': logs})
+    if protocol_filter:
+        logs = logs.filter(protocol=protocol_filter)
+
+    if anomaly_filter:
+        logs = logs.filter(anomaly_type__icontains=anomaly_filter)
+
+    return render(request, 'monitor/log_analysis.html', {'logs': logs})
 
 
 def logout_view(request):
@@ -42,7 +43,7 @@ def base(request):
 
 @login_required
 def anomaly_logs(request):
-    logs = AnomalyLog.objects.all().order_by('-timestamp')
+    logs = AnomalyLog.objects.exclude(anomaly_type="Normal").order_by('-timestamp')
 
     search_query = request.GET.get('search', '')
     protocol_filter = request.GET.get('protocol', '')
@@ -55,7 +56,7 @@ def anomaly_logs(request):
         logs = logs.filter(protocol=protocol_filter)
 
     if anomaly_filter:
-        logs = logs.filter(anomaly_type=anomaly_filter)
+        logs = logs.filter(anomaly_type__icontains=anomaly_filter)
 
     logs = logs[:50]
 

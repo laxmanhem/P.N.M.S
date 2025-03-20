@@ -129,7 +129,7 @@ def packet_handler(packet):
                 bandwidth=matrices['bandwidth'],
                 uplink_bandwidth=matrices['uplink_bandwidth'],
                 downlink_bandwidth=matrices['downlink_bandwidth'],
-                anomaly_type='Normal'
+                anomaly_type='normal'
             )
 
         # print(

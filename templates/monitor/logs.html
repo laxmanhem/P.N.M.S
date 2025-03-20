@@ -34,9 +34,10 @@
     <!-- Anomaly select dropdown -->
     <select name="anomaly" class="p-2 border rounded-lg">
         <option value="">All Anomalies</option>
-        <option value="DDoS" {% if request.GET.anomaly == "DDoS" %}selected{% endif %}>DDoS</option>
-        <option value="Malware" {% if request.GET.anomaly == "Malware" %}selected{% endif %}>Malware</option>
-        <option value="Intrusion" {% if request.GET.anomaly == "Intrusion" %}selected{% endif %}>Intrusion</option>
+        <option value="jitter_anomaly" {% if request.GET.anomaly == "jitter_anomaly" %}selected{% endif %}>Jitter</option>
+        <option value="latency_anomaly" {% if request.GET.anomaly == "latency_anomaly" %}selected{% endif %}>Latency</option>
+        <option value="downlink_bandwidth_anomaly" {% if request.GET.anomaly == "downlink_bandwidth_anomaly" %}selected{% endif %}>Downlink Bandwidth</option>
+        <option value="uplink_bandwidth_anomaly" {% if request.GET.anomaly == "uplink_bandwidth_anomaly" %}selected{% endif %}>Uplink Bandwidth</option>
     </select>
 
     <!-- Submit button -->

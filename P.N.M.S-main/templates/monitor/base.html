@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-800 text-white p-6 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-4xl font-bold tracking-wide">Network Monitor</h1>
+            <nav class="flex space-x-6 text-lg">
+                <a href="{% url 'anomaly_logs' %}" class="text-white hover:bg-blue-700 px-6 py-3 rounded-lg transition transform hover:scale-105">Current Anomaly Logs</a>
+                <a href="{% url 'log_analysis' %}" class="text-white hover:bg-purple-600 px-6 py-3 rounded-lg transition transform hover:scale-105">Log Analysis</a>
+                <a href="{% url 'logout' %}" class="text-white hover:bg-red-600 px-6 py-3 rounded-lg transition transform hover:scale-105">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto mt-8">
+
+        <h2 class="text-3xl font-semibold text-center text-indigo-800 mb-6">Live Network Traffic</h2>
+
+                <!-- Packet Information -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2 text-indigo-600">Packet Details</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><strong>Timestamp:</strong> <span id="packet-timestamp"></span></div>
+                        <div><strong>Source IP:</strong> <span id="packet-source-ip"></span></div>
+                        <div><strong>Destination IP:</strong> <span id="packet-dest-ip"></span></div>
+                        <div><strong>Length:</strong> <span id="packet-length"></span></div>
+                        <div><strong>Protocol:</strong> <span id="packet-protocol"></span></div>
+                    </div>
+                </div>
+
+                <!-- Metrics Information -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2 text-indigo-600">Metrics</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><strong>Latency:</strong> <span id="metrics-latency"></span> ms</div>
+                        <div><strong>Jitter:</strong> <span id="metrics-jitter"></span> ms</div>
+                        <div><strong>Packet Loss:</strong> <span id="metrics-packet-loss"></span>%</div>
+                        <div><strong>Bandwidth:</strong> <span id="metrics-bandwidth"></span> Mbps</div>
+                        <div><strong>Uplink Bandwidth:</strong> <span id="metrics-uplink-bandwidth"></span> Mbps</div>
+                        <div><strong>Downlink Bandwidth:</strong> <span id="metrics-downlink-bandwidth"></span> Mbps</div>
+                    </div>
+                </div>
+
+                <!-- Anomaly Information -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-red-600">Anomaly Detection</h3>
+                    <div id="anomaly-status" class="inline-block px-4 py-2 rounded-full text-white font-semibold"></div>
+                </div>
+
+                <!-- Detailed Anomalies -->
+                <div>
+                    <h3 class="text-lg font-medium mt-4 text-indigo-700">Current Anomalies</h3>
+                    <ul id="anomaly-list" class="list-disc pl-5"></ul>
+                </div>
+
+                <!-- Weekly Anomalies -->
+                <div>
+                    <h3 class="text-lg font-medium mt-4 text-indigo-700">Weekly Anomalies</h3>
+                    <ul id="week-anomaly-list" class="list-disc pl-5"></ul>
+                </div>
+        <div>
+            <h2 class="text-2xl font-semibold text-center text-indigo-800 mb-4">Real-Time Network Monitoring</h2>
+            <canvas id="latencyChart" class="bg-white shadow-lg rounded-lg p-4"></canvas>
+        </div>
+    </main>
+
+    <script>
+        // Initialize arrays to store timestamps and latencies
+        const timestamps = [];
+        const latencies = [];
+
+        // Initialize the chart
+        const ctx = document.getElementById('latencyChart').getContext('2d');
+        const latencyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Latency (ms)',
+                    data: latencies,
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Latency (ms)'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateUI(data) {
+            // Packet Details
+            document.getElementById('packet-timestamp').textContent = new Date(data.packet.timestamp * 1000).toLocaleString();
+            document.getElementById('packet-source-ip').textContent = data.packet.source_ip;
+            document.getElementById('packet-dest-ip').textContent = data.packet.dest_ip;
+            document.getElementById('packet-length').textContent = data.packet.length;
+            document.getElementById('packet-protocol').textContent = data.packet.protocol;
+
+            // Metrics
+            document.getElementById('metrics-latency').textContent = data.metrics.latency.toFixed(2);
+            document.getElementById('metrics-jitter').textContent = data.metrics.jitter.toFixed(2);
+            document.getElementById('metrics-packet-loss').textContent = data.metrics.packet_loss;
+            document.getElementById('metrics-bandwidth').textContent = (data.metrics.bandwidth / 1000).toFixed(2);
+            document.getElementById('metrics-uplink-bandwidth').textContent = (data.metrics.uplink_bandwidth / 1000).toFixed(2);
+            document.getElementById('metrics-downlink-bandwidth').textContent = (data.metrics.downlink_bandwidth / 1000).toFixed(2);
+
+            // Anomaly Status
+            const anomalyStatus = document.getElementById('anomaly-status');
+            const anomalyList = document.getElementById('anomaly-list');
+            const weekAnomalyList = document.getElementById('week-anomaly-list');
+
+            // Update overall anomaly status
+            const hasAnomaly = data.anomaly;
+            anomalyStatus.textContent = hasAnomaly ? "Anomaly Detected" : "No Anomaly";
+            anomalyStatus.classList.toggle('bg-red-500', hasAnomaly);
+            anomalyStatus.classList.toggle('bg-green-500', !hasAnomaly);
+
+            // Display detailed anomalies
+            anomalyList.innerHTML = "";
+            Object.entries(data.anomalies).forEach(([key, value]) => {
+                if (value) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = key.replace(/_/g, ' ').replace('anomaly', 'Anomaly');
+                    anomalyList.appendChild(listItem);
+                }
+            });
+
+            // Display weekly anomalies
+            weekAnomalyList.innerHTML = ""; // Clear previous entries
+
+            data.week_anomalies.forEach(anomaly => {
+                const anomalyItem = document.createElement('p');
+                anomalyItem.textContent = `${anomaly.anomaly_type}: ${anomaly.count}`;
+                weekAnomalyList.appendChild(anomalyItem);
+            });
+        }
+
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/network/');
+
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log({data});
+            const timestamp = data.packet.timestamp;
+            const latency = data.metrics.latency;
+
+            timestamps.push(timestamp)
+            latencies.push(latency)
+
+            latencyChart.data.labels = timestamps;
+            latencyChart.data.datasets[0].data = latencies;
+            latencyChart.update();
+            updateUI(data);
+        };
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-blue-600 to-indigo-800 text-white p-8 mt-12 text-center">
+        <p class="text-lg font-semibold">Network Monitor</p>
+        <p class="text-sm">Providing real-time network monitoring solutions with anomaly detection.</p>
+        <p class="text-sm mt-4">© 2025 Network Monitor. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>

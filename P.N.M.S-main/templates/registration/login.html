@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P.N.M.S. Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-black text-blue-400">
+
+    <div class="bg-gray-900 p-8 rounded-lg shadow-lg w-full max-w-sm border border-blue-400">
+        <h1 class="text-3xl font-bold text-center text-blue-500 mb-6">☠️ P.N.M.S. Login ☠️</h1>
+
+        <form class="space-y-4" method="POST">
+            {% csrf_token %}
+
+            <div>
+                <label class="block font-medium text-blue-300">Username</label>
+                <input type="text" name="username" class="w-full p-3 bg-black border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-blue-400" placeholder="Enter username">
+            </div>
+
+            <div>
+                <label class="block font-medium text-blue-300">Password</label>
+                <input type="password" name="password" class="w-full p-3 bg-black border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-blue-400" placeholder="Enter password">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-black py-3 rounded-lg hover:bg-blue-600 transition font-bold">
+                Access Granted
+            </button>
+        </form>
+
+        <p class="text-center text-blue-300 mt-4">
+            No access?
+        </p>
+    </div>
+
+</body>
+</html>
